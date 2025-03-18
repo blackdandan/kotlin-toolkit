@@ -12,6 +12,7 @@ dependencyResolutionManagement {
         mavenCentral()
         maven(url = "https://s3.amazonaws.com/repo.commonsware.com")
         maven(url = "https://customers.pspdfkit.com/maven")
+        maven(url= "https://maven.aliyun.com/nexus/content/groups/public/")
     }
 }
 
