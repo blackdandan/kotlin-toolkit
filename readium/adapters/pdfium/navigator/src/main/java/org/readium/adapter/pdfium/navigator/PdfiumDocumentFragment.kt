@@ -80,6 +80,7 @@ public class PdfiumDocumentFragment internal constructor(
         fun onDrag(motionEvent: MotionEvent, start: PointF): Boolean
     }
 
+    private var listSpacesItemDecoration: ListSpacesItemDecoration? = null
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: PdfPageAdapter
     private var snapHelper: PagerSnapHelper? = null
@@ -166,7 +167,9 @@ public class PdfiumDocumentFragment internal constructor(
             recyclerView.adapter = adapter
             // Set the initial page index
             (recyclerView.layoutManager as? LinearLayoutManager)?.scrollToPosition(pageIndex)
-
+            listSpacesItemDecoration?.let {
+                recyclerView.removeItemDecoration(it)
+            }
             // Handle snap effect for horizontal scrolling
             if (settings.scrollAxis == Axis.HORIZONTAL) {
                 snapHelper = PagerSnapHelper()
@@ -181,7 +184,11 @@ public class PdfiumDocumentFragment internal constructor(
                 (recyclerView.layoutManager as? LinearLayoutManager)?.isSmoothScrollbarEnabled = true
                 // 纵向模式下有pageSpacing
                 settings.pageSpacing
-                recyclerView.addItemDecoration(ListSpacesItemDecoration(settings.pageSpacing.toInt(), ListSpacesItemDecoration.VERTICAL))
+                listSpacesItemDecoration = ListSpacesItemDecoration(
+                    settings.pageSpacing.toInt(),
+                    ListSpacesItemDecoration.VERTICAL
+                )
+                recyclerView.addItemDecoration(listSpacesItemDecoration!!)
             }
 
             adapter.setonTapListener { point ->
