@@ -28,4 +28,6 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.viewpager2)
+    implementation(libs.androidx.recyclerview)
 }

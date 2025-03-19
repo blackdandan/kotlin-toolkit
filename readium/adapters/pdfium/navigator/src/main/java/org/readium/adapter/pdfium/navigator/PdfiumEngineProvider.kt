@@ -9,9 +9,11 @@
 package org.readium.adapter.pdfium.navigator
 
 import android.graphics.PointF
+import android.view.MotionEvent
 import com.github.barteksc.pdfviewer.PDFView
 import org.readium.r2.navigator.OverflowableNavigator
 import org.readium.r2.navigator.SimpleOverflow
+import org.readium.r2.navigator.input.DragEvent
 import org.readium.r2.navigator.input.TapEvent
 import org.readium.r2.navigator.pdf.PdfDocumentFragmentInput
 import org.readium.r2.navigator.pdf.PdfEngineProvider
@@ -39,7 +41,7 @@ public class PdfiumEngineProvider(
     public interface Listener : PdfEngineProvider.Listener {
 
         /** Called when configuring [PDFView]. */
-        public fun onConfigurePdfView(configurator: PDFView.Configurator) {}
+        public fun onConfigurePdfView() {}
     }
 
     override fun createDocumentFragmentFactory(
@@ -56,12 +58,29 @@ public class PdfiumEngineProvider(
                         input.navigatorListener?.onResourceLoadFailed(href, error)
                     }
 
-                    override fun onConfigurePdfView(configurator: PDFView.Configurator) {
-                        listener?.onConfigurePdfView(configurator)
+                    override fun onConfigurePdfView() {
+                        listener?.onConfigurePdfView()
                     }
+
 
                     override fun onTap(point: PointF): Boolean =
                         input.inputListener?.onTap(TapEvent(point)) ?: false
+
+                    override fun onDrag(motionEvent: MotionEvent, start: PointF): Boolean {
+                        var consumed = false
+                        when (motionEvent.action) {
+                            MotionEvent.ACTION_DOWN -> {
+                                consumed = input.inputListener?.onDrag(DragEvent(DragEvent.Type.Start, PointF(start.x, start.y), PointF(0f, 0f))) ?: false
+                            }
+                            MotionEvent.ACTION_MOVE -> {
+                                consumed = input.inputListener?.onDrag(DragEvent(DragEvent.Type.Move, PointF(start.x, start.y), PointF(motionEvent.x, motionEvent.y))) ?: false
+                            }
+                            MotionEvent.ACTION_UP -> {
+                                consumed = input.inputListener?.onDrag(DragEvent(DragEvent.Type.End, PointF(start.x, start.y), PointF(motionEvent.x, motionEvent.y))) ?: false
+                            }
+                        }
+                        return consumed
+                    }
                 }
             )
         }

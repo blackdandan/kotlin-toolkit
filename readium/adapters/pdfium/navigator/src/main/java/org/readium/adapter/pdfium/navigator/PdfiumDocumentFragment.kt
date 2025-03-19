@@ -8,14 +8,17 @@
 
 package org.readium.adapter.pdfium.navigator
 
+import PdfPageAdapter
 import android.graphics.PointF
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
-import com.github.barteksc.pdfviewer.PDFView
-import kotlin.math.roundToInt
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.PagerSnapHelper
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,6 +41,7 @@ import org.readium.r2.shared.util.toDebugDescription
 import timber.log.Timber
 
 @ExperimentalReadiumApi
+@OptIn(InternalReadiumApi::class)
 public class PdfiumDocumentFragment internal constructor(
     private val publication: Publication,
     private val href: Url,
@@ -69,20 +73,33 @@ public class PdfiumDocumentFragment internal constructor(
 
     internal interface Listener {
         fun onResourceLoadFailed(href: Url, error: ReadError)
-        fun onConfigurePdfView(configurator: PDFView.Configurator)
+        fun onConfigurePdfView()
         fun onTap(point: PointF): Boolean
+        fun onDrag(motionEvent: MotionEvent, start: PointF): Boolean
     }
 
-    private lateinit var pdfView: PDFView
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: PdfPageAdapter
+    private var snapHelper: PagerSnapHelper? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View =
-        PDFView(inflater.context, null)
-            .also { pdfView = it }
+        savedInstanceState: Bundle?
+    ): View {
+        recyclerView = RecyclerView(inflater.context).apply {
+            layoutManager = LinearLayoutManager(inflater.context).apply {
+                orientation = if (settings.scrollAxis == Axis.HORIZONTAL) {
+                    LinearLayoutManager.HORIZONTAL
+                } else {
+                    LinearLayoutManager.VERTICAL
+                }
+            }
+        }
+        return recyclerView
+    }
 
+    @OptIn(InternalReadiumApi::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -99,8 +116,6 @@ public class PdfiumDocumentFragment internal constructor(
         resetJob.launch {
             val resource = requireNotNull(publication.get(href))
             val document = PdfiumDocumentFactory(context)
-                // PDFium crashes when reusing the same PdfDocument, so we must not cache it.
-//                    .cachedIn(publication)
                 .open(resource, null)
                 .getOrElse { error ->
                     Timber.e(error.toDebugDescription())
@@ -109,40 +124,37 @@ public class PdfiumDocumentFragment internal constructor(
                 }
 
             pageCount = document.pageCount
-            val page = convertPageIndexToView(pageIndex)
+            adapter = PdfPageAdapter(requireContext(), pdfiumCore = document.core, pdfDocument = document.document, pageCount = pageCount, settings.scrollAxis == Axis.HORIZONTAL)
+            recyclerView.layoutManager = LinearLayoutManager(context).apply {
+                orientation = if (settings.scrollAxis == Axis.HORIZONTAL) {
+                    LinearLayoutManager.HORIZONTAL
+                } else {
+                    LinearLayoutManager.VERTICAL
+                }
+            }
 
-            pdfView.recycle()
-            pdfView
-                .fromSource { _, _, _ -> document.document }
-                .apply {
-                    if (isPagesOrderReversed) {
-                        // AndroidPdfViewer doesn't support RTL. A workaround is to provide
-                        // the explicit page list in the right order.
-                        pages(*((pageCount - 1) downTo 0).toList().toIntArray())
-                    }
-                }
-                .swipeHorizontal(settings.scrollAxis == Axis.HORIZONTAL)
-                .spacing(settings.pageSpacing.roundToInt())
-                // Customization of [PDFView] is done before setting the listeners,
-                // to avoid overriding them in reading apps, which would break the
-                // navigator.
-                .apply { listener?.onConfigurePdfView(this) }
-                .defaultPage(page)
-                .onRender { _, _, _ ->
-                    if (settings.fit == Fit.WIDTH) {
-                        pdfView.fitToWidth()
-                        // Using `fitToWidth` often breaks the use of `defaultPage`, so we
-                        // need to jump manually to the target page.
-                        pdfView.jumpTo(page, false)
-                    }
-                }
-                .onPageChange { index, _ ->
-                    _pageIndex.value = convertPageIndexFromView(index)
-                }
-                .onTap { event ->
-                    listener?.onTap(PointF(event.x, event.y)) ?: false
-                }
-                .load()
+            recyclerView.adapter = adapter
+            // Set the initial page index
+            (recyclerView.layoutManager as? LinearLayoutManager)?.scrollToPosition(pageIndex)
+
+            // Handle snap effect for horizontal scrolling
+            if (settings.scrollAxis == Axis.HORIZONTAL) {
+                snapHelper = PagerSnapHelper()
+                snapHelper?.attachToRecyclerView(recyclerView)
+                // Ensure one page scroll at a time in horizontal mode
+                (recyclerView.layoutManager as? LinearLayoutManager)?.isSmoothScrollbarEnabled = false
+            } else {
+                // Remove snap effect for vertical scrolling
+                snapHelper?.attachToRecyclerView(null)
+                (recyclerView.layoutManager as? LinearLayoutManager)?.isSmoothScrollbarEnabled = true
+            }
+
+            adapter.setonTapListener { point ->
+                listener?.onTap(point) ?: false
+            }
+            adapter.setOnDragListener { motionEvent, start ->
+                listener?.onDrag(motionEvent, start)
+            }
         }
     }
 
@@ -155,7 +167,7 @@ public class PdfiumDocumentFragment internal constructor(
         if (!isValidPageIndex(index)) {
             return false
         }
-        pdfView.jumpTo(convertPageIndexToView(index), animated)
+        (recyclerView.layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(index, 0)
         return true
     }
 
