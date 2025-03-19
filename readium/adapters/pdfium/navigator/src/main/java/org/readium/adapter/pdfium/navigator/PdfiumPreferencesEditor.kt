@@ -59,6 +59,14 @@ public class PdfiumPreferencesEditor internal constructor(
             supportedValues = listOf(Fit.CONTAIN, Fit.WIDTH)
         )
 
+    public val backgroundColor: Preference<Color> =
+        PreferenceDelegate(
+            getValue = { preferences.backgroundColor },
+            getEffectiveValue = { state.settings.backgroundColor },
+            getIsEffective = { true },
+            updateValue = { value -> updateValues { it.copy(backgroundColor = value) } }
+        )
+
     /**
      * Space between pages in dp.
      */

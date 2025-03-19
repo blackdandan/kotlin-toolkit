@@ -18,4 +18,5 @@ public data class PdfiumSettings(
     val pageSpacing: Double,
     val readingProgression: ReadingProgression,
     val scrollAxis: Axis,
+    val backgroundColor: Color
 ) : Configurable.Settings

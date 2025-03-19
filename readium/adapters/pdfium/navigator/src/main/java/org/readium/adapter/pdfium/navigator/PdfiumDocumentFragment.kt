@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.readium.adapter.pdfium.document.PdfiumDocumentFactory
 import org.readium.r2.navigator.pdf.PdfDocumentFragment
 import org.readium.r2.navigator.preferences.Axis
+import org.readium.r2.navigator.preferences.Color
 import org.readium.r2.navigator.preferences.Fit
 import org.readium.r2.navigator.preferences.ReadingProgression
 import org.readium.r2.shared.ExperimentalReadiumApi
@@ -66,7 +67,8 @@ public class PdfiumDocumentFragment internal constructor(
             fit = Fit.WIDTH,
             pageSpacing = 0.0,
             readingProgression = ReadingProgression.LTR,
-            scrollAxis = Axis.VERTICAL
+            scrollAxis = Axis.VERTICAL,
+            backgroundColor = Color(android.graphics.Color.WHITE)
         ),
         listener = null
     )
@@ -149,6 +151,10 @@ public class PdfiumDocumentFragment internal constructor(
 
             pageCount = document.pageCount
             adapter = PdfPageAdapter(requireContext(), pdfiumCore = document.core, pdfDocument = document.document, pageCount = pageCount, settings.scrollAxis == Axis.HORIZONTAL)
+            // 设置RecyclerView的背景色
+            recyclerView.setBackgroundColor(settings.backgroundColor.int)
+            // 设置 itemView的背景色
+            adapter.setBackgroundColor(settings.backgroundColor.int)
             recyclerView.layoutManager = LinearLayoutManager(context).apply {
                 orientation = if (settings.scrollAxis == Axis.HORIZONTAL) {
                     LinearLayoutManager.HORIZONTAL
@@ -164,6 +170,8 @@ public class PdfiumDocumentFragment internal constructor(
             // Handle snap effect for horizontal scrolling
             if (settings.scrollAxis == Axis.HORIZONTAL) {
                 snapHelper = PagerSnapHelper()
+                // 清空，防止多次attach导致crash
+                recyclerView.onFlingListener = null
                 snapHelper?.attachToRecyclerView(recyclerView)
                 // Ensure one page scroll at a time in horizontal mode
                 (recyclerView.layoutManager as? LinearLayoutManager)?.isSmoothScrollbarEnabled = false
@@ -171,6 +179,9 @@ public class PdfiumDocumentFragment internal constructor(
                 // Remove snap effect for vertical scrolling
                 snapHelper?.attachToRecyclerView(null)
                 (recyclerView.layoutManager as? LinearLayoutManager)?.isSmoothScrollbarEnabled = true
+                // 纵向模式下有pageSpacing
+                settings.pageSpacing
+                recyclerView.addItemDecoration(ListSpacesItemDecoration(settings.pageSpacing.toInt(), ListSpacesItemDecoration.VERTICAL))
             }
 
             adapter.setonTapListener { point ->

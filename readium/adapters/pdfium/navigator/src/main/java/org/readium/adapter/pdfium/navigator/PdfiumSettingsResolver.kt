@@ -11,6 +11,7 @@ import org.readium.r2.navigator.preferences.Fit
 import org.readium.r2.navigator.preferences.ReadingProgression
 import org.readium.r2.shared.publication.Metadata
 import org.readium.r2.shared.publication.ReadingProgression as PublicationReadingProgression
+import org.readium.r2.navigator.preferences.Color
 
 internal class PdfiumSettingsResolver(
     private val metadata: Metadata,
@@ -42,11 +43,16 @@ internal class PdfiumSettingsResolver(
                 ?: defaults.pageSpacing
                 ?: 16.0
 
+        val backgroundColor: Color =
+            preferences.backgroundColor
+                ?: Color(android.graphics.Color.WHITE)
+
         return PdfiumSettings(
             fit = fit,
             pageSpacing = pageSpacing,
             readingProgression = readingProgression,
-            scrollAxis = scrollAxis
+            scrollAxis = scrollAxis,
+            backgroundColor = backgroundColor
         )
     }
 }

@@ -5,6 +5,7 @@ import android.graphics.PointF
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.ImageView
+import androidx.annotation.ColorInt
 import androidx.recyclerview.widget.RecyclerView
 import com.shockwave.pdfium.PdfDocument
 import com.shockwave.pdfium.PdfiumCore
@@ -16,11 +17,14 @@ public class PdfPageAdapter(
     private val pageCount: Int,
     private val isHorizontal: Boolean
 ) : RecyclerView.Adapter<PdfPageAdapter.PdfPageViewHolder>() {
-
+    private var mBgColorInt: Int? = null
     public var onTapAction: ((PointF) -> Unit)? = null
     public var onDragAction: ((MotionEvent, PointF) -> Unit)? = null
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PdfPageViewHolder {
         val view = ImageView(context)
+        mBgColorInt?.let {
+            view.setBackgroundColor(it)
+        }
         view.layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             if (isHorizontal) ViewGroup.LayoutParams.MATCH_PARENT else ViewGroup.LayoutParams.WRAP_CONTENT
@@ -39,6 +43,10 @@ public class PdfPageAdapter(
 
     public fun setOnDragListener(onDragAction: (MotionEvent, PointF) -> Unit ) {
         this.onDragAction = onDragAction
+    }
+
+    public fun setBackgroundColor(@ColorInt int: Int) {
+        mBgColorInt = int
     }
 
     public inner class PdfPageViewHolder(itemView: ImageView) : RecyclerView.ViewHolder(itemView) {

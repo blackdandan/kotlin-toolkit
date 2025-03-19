@@ -8,6 +8,7 @@ package org.readium.adapter.pdfium.navigator
 
 import kotlinx.serialization.Serializable
 import org.readium.r2.navigator.preferences.Axis
+import org.readium.r2.navigator.preferences.Color
 import org.readium.r2.navigator.preferences.Configurable
 import org.readium.r2.navigator.preferences.Fit
 import org.readium.r2.navigator.preferences.ReadingProgression
@@ -26,6 +27,7 @@ public data class PdfiumPreferences(
     val pageSpacing: Double? = null,
     val readingProgression: ReadingProgression? = null,
     val scrollAxis: Axis? = null,
+    val backgroundColor: Color? = null
 ) : Configurable.Preferences<PdfiumPreferences> {
 
     init {
@@ -38,6 +40,7 @@ public data class PdfiumPreferences(
             fit = other.fit ?: fit,
             pageSpacing = other.pageSpacing ?: pageSpacing,
             readingProgression = other.readingProgression ?: readingProgression,
-            scrollAxis = other.scrollAxis ?: scrollAxis
+            scrollAxis = other.scrollAxis ?: scrollAxis,
+            backgroundColor = other.backgroundColor ?: backgroundColor
         )
 }
