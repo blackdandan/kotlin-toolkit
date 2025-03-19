@@ -81,6 +81,23 @@ public class PdfiumDocumentFragment internal constructor(
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: PdfPageAdapter
     private var snapHelper: PagerSnapHelper? = null
+    private val pageChangeListener = PdfPageChangeListener()
+
+    private inner class PdfPageChangeListener : RecyclerView.OnScrollListener() {
+        private var lastVisiblePosition = -1
+
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            super.onScrolled(recyclerView, dx, dy)
+            
+            val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
+            val firstVisiblePosition = layoutManager.findFirstCompletelyVisibleItemPosition()
+            
+            if (firstVisiblePosition != -1 && firstVisiblePosition != lastVisiblePosition) {
+                lastVisiblePosition = firstVisiblePosition
+                _pageIndex.value = firstVisiblePosition
+            }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -103,8 +120,15 @@ public class PdfiumDocumentFragment internal constructor(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        recyclerView.addOnScrollListener(pageChangeListener)
+        
         resetJob = SingleJob(viewLifecycleOwner.lifecycleScope)
         reset(pageIndex = initialPageIndex)
+    }
+
+    override fun onDestroyView() {
+        recyclerView.removeOnScrollListener(pageChangeListener)
+        super.onDestroyView()
     }
 
     private lateinit var resetJob: SingleJob
@@ -168,6 +192,7 @@ public class PdfiumDocumentFragment internal constructor(
             return false
         }
         (recyclerView.layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(index, 0)
+        _pageIndex.value = index
         return true
     }
 
