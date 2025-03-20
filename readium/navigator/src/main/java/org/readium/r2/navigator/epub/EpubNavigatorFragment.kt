@@ -425,7 +425,9 @@ public class EpubNavigatorFragment internal constructor(
                             webView.scrollToStart()
                         } else if (currentPagerPosition > position) {
                             // handle swipe RIGHT
-                            webView.scrollToEnd()
+                            // 产品要求左右滑动切章的时候不要切到章节末尾
+//                            webView.scrollToEnd()
+                            webView.scrollToStart()
                         }
                     } else {
                         if (currentPagerPosition < position) {
@@ -458,7 +460,6 @@ public class EpubNavigatorFragment internal constructor(
         // We need to null out the adapter explicitly, otherwise the page fragments will leak.
         resourcePager.adapter = null
         parent.removeView(resourcePager)
-
         resourcePager = R2ViewPager(requireContext())
         resourcePager.id = R.id.resourcePager
         resourcePager.publicationType = when (publication.metadata.presentation.layout) {
