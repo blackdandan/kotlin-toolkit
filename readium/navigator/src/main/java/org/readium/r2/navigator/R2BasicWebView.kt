@@ -214,16 +214,15 @@ internal open class R2BasicWebView(context: Context, attrs: AttributeSet) : WebV
             }
 
             when {
+
                 // If the user is in scrollMode and has disabled swipe pagination, do nothing.
                 scrollMode && this@R2BasicWebView.disablePageTurnsWhileScrolling -> {}
-
-                scrollMode ->
+                scrollMode && !this@R2BasicWebView.canScrollVertically(1)->
                     goRight(jump = true)
-
-                !this@R2BasicWebView.canScrollHorizontally(1) ->
+                !scrollMode && !this@R2BasicWebView.canScrollHorizontally(1)->
                     goRight(jump = false)
 
-                else ->
+                !scrollMode ->
                     runJavaScript("readium.scrollRight();") { success ->
                         if (!success.toBoolean()) {
                             goRight(jump = false)
@@ -250,14 +249,13 @@ internal open class R2BasicWebView(context: Context, attrs: AttributeSet) : WebV
             when {
                 // If the user is in scrollMode and has disabled swipe pagination, do nothing.
                 scrollMode && this@R2BasicWebView.disablePageTurnsWhileScrolling -> {}
-
-                scrollMode ->
+                scrollMode && !this@R2BasicWebView.canScrollVertically(1) ->
                     goLeft(jump = true)
 
-                !this@R2BasicWebView.canScrollHorizontally(-1) ->
+                !scrollMode && !this@R2BasicWebView.canScrollHorizontally(-1) ->
                     goLeft(jump = false)
 
-                else ->
+                !scrollMode ->
                     runJavaScript("readium.scrollLeft();") { success ->
                         if (!success.toBoolean()) {
                             goLeft(jump = false)
