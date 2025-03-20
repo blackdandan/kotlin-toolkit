@@ -425,8 +425,7 @@ public class EpubNavigatorFragment internal constructor(
                             webView.scrollToStart()
                         } else if (currentPagerPosition > position) {
                             // handle swipe RIGHT
-                            // 产品要求左右滑动切章的时候不要切到章节末尾
-//                            webView.scrollToEnd()
+                            webView.scrollToEnd()
                             webView.scrollToStart()
                         }
                     } else {

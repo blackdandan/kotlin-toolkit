@@ -15,6 +15,7 @@ import android.content.Context
 import android.graphics.Rect
 import android.os.Build
 import android.util.AttributeSet
+import android.util.Log
 import android.view.*
 import android.view.animation.Interpolator
 import android.widget.EdgeEffect
@@ -114,8 +115,15 @@ internal class R2WebView(context: Context, attrs: AttributeSet) : R2BasicWebView
      * Position of the last motion event.
      */
     private var mLastMotionX: Float = 0.toFloat()
+    private var mLastMotionY: Float = 0.toFloat()
     private var mInitialMotionX: Float = 0.toFloat()
     private var mInitialMotionY: Float = 0.toFloat()
+
+    /**
+     * 记录开始滑动的时候能不能继续往下滑
+     */
+    private var canScrollDownWhenStart = true
+    private var canScrollUpWhenStart = true
 
     /**
      * Sentinel value for no current active pointer.
@@ -702,11 +710,16 @@ internal class R2WebView(context: Context, attrs: AttributeSet) : R2BasicWebView
                     mHasAbortedScroller = !scroller.isFinished
                     scroller.abortAnimation()
                 }
+                // 记录开始的时候能不能继续往下滑动
+                canScrollDownWhenStart = canScrollVertically(1)
+                canScrollUpWhenStart = canScrollVertically(-1)
 
                 // Remember where the motion event started
                 mInitialMotionX = ev.x
                 mLastMotionX = mInitialMotionX
                 mInitialMotionY = ev.y
+                mLastMotionY = mInitialMotionY
+
                 mActivePointerId = ev.getPointerId(0)
             }
             MotionEvent.ACTION_MOVE -> {
@@ -720,14 +733,20 @@ internal class R2WebView(context: Context, attrs: AttributeSet) : R2BasicWebView
                     val pointerIndex = ev.findPointerIndex(mActivePointerId)
                     val x = ev.safeGetX(pointerIndex)
                     val xDiff = abs(x - mLastMotionX)
+                    val yDiff = abs(x - mLastMotionY)
 
-                    if (xDiff > mTouchSlop) {
+                    if (xDiff > mTouchSlop || yDiff > mTouchSlop) {
                         if (DEBUG) Timber.v("Starting drag!")
                         mIsBeingDragged = true
                         mLastMotionX = if (x - mInitialMotionX > 0) {
                             mInitialMotionX + mTouchSlop
                         } else {
                             mInitialMotionX - mTouchSlop
+                        }
+                        mLastMotionY = if (y - mInitialMotionY > 0) {
+                            mInitialMotionY + mTouchSlop
+                        } else {
+                            mInitialMotionY - mTouchSlop
                         }
                         setScrollState(SCROLL_STATE_DRAGGING)
                     }
@@ -744,11 +763,19 @@ internal class R2WebView(context: Context, attrs: AttributeSet) : R2BasicWebView
 
                     if (scrollMode) {
                         val totalDelta = (y - mInitialMotionY).toInt()
+                        val totalDeltaX = (x - mInitialMotionX).toInt()
                         if (abs(totalDelta) < 200) {
                             if (mInitialMotionX < x) {
                                 scrollLeft(animated = true)
                             } else if (mInitialMotionX > x) {
                                 scrollRight(animated = true)
+                            }
+                        }
+                        if (abs(totalDeltaX) < 200) {
+                            if (mInitialMotionY > y && !canScrollDownWhenStart) {
+                                scrollRight(animated = true)
+                            } else if (mInitialMotionY < y && !canScrollUpWhenStart) {
+                                scrollLeft(animated = true)
                             }
                         }
                     } else {

@@ -249,7 +249,7 @@ internal open class R2BasicWebView(context: Context, attrs: AttributeSet) : WebV
             when {
                 // If the user is in scrollMode and has disabled swipe pagination, do nothing.
                 scrollMode && this@R2BasicWebView.disablePageTurnsWhileScrolling -> {}
-                scrollMode && !this@R2BasicWebView.canScrollVertically(1) ->
+                scrollMode && !this@R2BasicWebView.canScrollVertically(-1) ->
                     goLeft(jump = true)
 
                 !scrollMode && !this@R2BasicWebView.canScrollHorizontally(-1) ->
