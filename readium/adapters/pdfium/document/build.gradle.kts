@@ -14,8 +14,8 @@ android {
 
 dependencies {
     api(project(":readium:readium-shared"))
-    implementation(files("../libs/pdfium-android-1.8.2.jar"))
-
+//    implementation(files("../libs/pdfium-android-1.8.2.jar"))
+    implementation("com.github.barteksc:pdfium-android:1.9.0")
     implementation(libs.timber)
     implementation(libs.kotlinx.coroutines.android)
 }
