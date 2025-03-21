@@ -75,7 +75,7 @@ public class PdfiumDocumentFragment internal constructor(
         fun onResourceLoadFailed(href: Url, error: ReadError)
         fun onConfigurePdfView()
         fun onTap(point: PointF): Boolean
-        fun onDrag(motionEvent: MotionEvent, start: PointF): Boolean
+        fun onDrag(): Boolean
     }
     private lateinit var pdfView: PDFView
     override fun onCreateView(
@@ -126,7 +126,9 @@ public class PdfiumDocumentFragment internal constructor(
                     }
                 }
                 .swipeHorizontal(settings.scrollAxis == Axis.HORIZONTAL)
-
+                .onPageScroll { _, _ ->
+                    listener?.onDrag()
+                }
                 .spacing(settings.pageSpacing.roundToInt())
                 // Customization of [PDFView] is done before setting the listeners,
                 // to avoid overriding them in reading apps, which would break the

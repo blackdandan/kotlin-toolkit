@@ -67,20 +67,9 @@ public class PdfiumEngineProvider(
                     override fun onTap(point: PointF): Boolean =
                         input.inputListener?.onTap(TapEvent(point)) ?: false
 
-                    override fun onDrag(motionEvent: MotionEvent, start: PointF): Boolean {
-                        var consumed = false
-                        when (motionEvent.action) {
-                            MotionEvent.ACTION_DOWN -> {
-                                consumed = input.inputListener?.onDrag(DragEvent(DragEvent.Type.Start, PointF(start.x, start.y), PointF(0f, 0f))) ?: false
-                            }
-                            MotionEvent.ACTION_MOVE -> {
-                                consumed = input.inputListener?.onDrag(DragEvent(DragEvent.Type.Move, PointF(start.x, start.y), PointF(motionEvent.x, motionEvent.y))) ?: false
-                            }
-                            MotionEvent.ACTION_UP -> {
-                                consumed = input.inputListener?.onDrag(DragEvent(DragEvent.Type.End, PointF(start.x, start.y), PointF(motionEvent.x, motionEvent.y))) ?: false
-                            }
-                        }
-                        return consumed
+                    override fun onDrag(): Boolean {
+                        input.inputListener?.onDrag(DragEvent(DragEvent.Type.Move, PointF(), PointF()))
+                        return false
                     }
                 }
             )
