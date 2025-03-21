@@ -145,11 +145,21 @@ function scrollToRange(range) {
 
 function scrollToRect(rect) {
   if (isScrollModeEnabled()) {
-    document.scrollingElement.scrollTop = rect.top + window.scrollY;
+    // 使rect底部居中
+    const viewportHeight = window.innerHeight;
+    const offsetY = rect.top + window.scrollY - (viewportHeight / 2 - rect.height);
+    window.scrollTo({
+      top: offsetY,
+      behavior: 'smooth'
+    });
   } else {
-    document.scrollingElement.scrollLeft = snapOffset(
-      rect.left + window.scrollX
-    );
+    // 水平居中
+    const viewportWidth = window.innerWidth;
+    const offsetX = rect.left + window.scrollX - (viewportWidth - rect.width) / 2;
+    window.scrollTo({
+      left: snapOffset(offsetX),
+      behavior: 'smooth'
+    });
   }
 
   return true;
