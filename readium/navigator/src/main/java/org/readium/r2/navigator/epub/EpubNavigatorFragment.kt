@@ -426,7 +426,6 @@ public class EpubNavigatorFragment internal constructor(
                         } else if (currentPagerPosition > position) {
                             // handle swipe RIGHT
                             webView.scrollToEnd()
-                            webView.scrollToStart()
                         }
                     } else {
                         if (currentPagerPosition < position) {

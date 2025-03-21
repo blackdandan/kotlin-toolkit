@@ -735,7 +735,7 @@ internal class R2WebView(context: Context, attrs: AttributeSet) : R2BasicWebView
                     val xDiff = abs(x - mLastMotionX)
                     val yDiff = abs(x - mLastMotionY)
 
-                    if (xDiff > mTouchSlop || yDiff > mTouchSlop) {
+                    if (!scrollMode && xDiff > mTouchSlop) {
                         if (DEBUG) Timber.v("Starting drag!")
                         mIsBeingDragged = true
                         mLastMotionX = if (x - mInitialMotionX > 0) {
@@ -743,6 +743,15 @@ internal class R2WebView(context: Context, attrs: AttributeSet) : R2BasicWebView
                         } else {
                             mInitialMotionX - mTouchSlop
                         }
+                        mLastMotionY = if (y - mInitialMotionY > 0) {
+                            mInitialMotionY + mTouchSlop
+                        } else {
+                            mInitialMotionY - mTouchSlop
+                        }
+                        setScrollState(SCROLL_STATE_DRAGGING)
+                    }
+                    if (scrollMode && yDiff > mTouchSlop) {
+                        mIsBeingDragged = true
                         mLastMotionY = if (y - mInitialMotionY > 0) {
                             mInitialMotionY + mTouchSlop
                         } else {
@@ -764,14 +773,7 @@ internal class R2WebView(context: Context, attrs: AttributeSet) : R2BasicWebView
                     if (scrollMode) {
                         val totalDelta = (y - mInitialMotionY).toInt()
                         val totalDeltaX = (x - mInitialMotionX).toInt()
-                        if (abs(totalDelta) < 200) {
-                            if (mInitialMotionX < x) {
-                                scrollLeft(animated = true)
-                            } else if (mInitialMotionX > x) {
-                                scrollRight(animated = true)
-                            }
-                        }
-                        if (abs(totalDeltaX) < 200) {
+                        if (abs(totalDeltaX) < 200 || abs(totalDelta) > abs(totalDeltaX)) {
                             if (mInitialMotionY > y && !canScrollDownWhenStart) {
                                 scrollRight(animated = true)
                             } else if (mInitialMotionY < y && !canScrollUpWhenStart) {
