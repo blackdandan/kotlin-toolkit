@@ -75,16 +75,26 @@ public class PdfiumDocumentFragment internal constructor(
         fun onResourceLoadFailed(href: Url, error: ReadError)
         fun onConfigurePdfView()
         fun onTap(point: PointF): Boolean
-        fun onDrag(): Boolean
+        fun onDrag(motionEvent: MotionEvent, start: PointF): Boolean
     }
     private lateinit var pdfView: PDFView
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View =
-        PDFView(inflater.context, null)
-            .also { pdfView = it }
+    ): View {
+        return DragEventPdfView(inflater.context, null)
+            .also {
+                it.setCustomTouchListener(object : DragEventPdfView.CustomTouchListener {
+                    override fun onTouch(event: MotionEvent?) {
+                        event?.let {
+                            listener?.onDrag(event, PointF(event.x, event.y))
+                        }
+                    }
+                })
+                pdfView = it
+            }
+    }
 
     @OptIn(InternalReadiumApi::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -126,9 +136,6 @@ public class PdfiumDocumentFragment internal constructor(
                     }
                 }
                 .swipeHorizontal(settings.scrollAxis == Axis.HORIZONTAL)
-                .onPageScroll { _, _ ->
-                    listener?.onDrag()
-                }
                 .spacing(settings.pageSpacing.roundToInt())
                 // Customization of [PDFView] is done before setting the listeners,
                 // to avoid overriding them in reading apps, which would break the
