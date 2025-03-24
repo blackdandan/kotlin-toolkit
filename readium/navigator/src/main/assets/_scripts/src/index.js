@@ -18,6 +18,7 @@ import {
   scrollToStart,
   scrollToLocator,
   setProperty,
+  findClosestId,
   setCSSProperties,
 } from "./utils";
 import { findFirstVisibleLocator } from "./dom";
@@ -35,6 +36,7 @@ window.readium = {
   scrollToStart: scrollToStart,
   scrollToEnd: scrollToEnd,
   setCSSProperties: setCSSProperties,
+  findClosestId: findClosestId,
   setProperty: setProperty,
   removeProperty: removeProperty,
 

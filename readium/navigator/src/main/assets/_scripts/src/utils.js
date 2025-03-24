@@ -315,6 +315,44 @@ export function removeProperty(key) {
   root.style.removeProperty(key);
 }
 
+export function findClosestId(cssSelector, idArrayString) {
+  try {
+      var idArray = idArrayString.split(",");
+      var targetElement = document.querySelector(cssSelector);
+      if (!targetElement) {
+          logError("Element not found for selector:", cssSelector);
+          return null;
+      }
+
+      logError("Element founded:" + targetElement.offsetTop);
+
+      var closestId = null;
+      var closestDistance = Infinity;
+
+      idArray.forEach(function (id, index) {
+          var element = document.getElementById(id);
+          logError("Element :" + element + " " + id + " " + id + " element.offsetTop:" + element.offsetTop + " targetElement.offsetTop:" + targetElement.offsetTop);
+          logError(" element.offsetLeft:" + element.offsetLeft + " targetElement.offsetLeft:" + targetElement.offsetLeft);
+          logError("test:" + (element.offsetTop - targetElement.offsetTop))
+          logError("test abs:" + Math.abs(element.offsetTop - targetElement.offsetTop))
+          logError("test abs:" + Math.abs(element.offsetLeft - targetElement.offsetLeft))
+          if (element) {
+              var distance = Math.abs(element.offsetTop - targetElement.offsetTop)
+              logError("Element distance:element:" + element + " distance:" + distance);
+              if (distance < closestDistance) {
+                  closestDistance = distance;
+                  closestId = id;
+              }
+          }
+      });
+
+      return closestId;
+  } catch (e) {
+      logError("Error in findClosestIndexByCssSelector:", e);
+      return null;
+  }
+}
+
 /// Toolkit
 
 export function log() {

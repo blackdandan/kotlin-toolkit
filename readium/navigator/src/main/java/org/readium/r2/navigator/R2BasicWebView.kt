@@ -14,6 +14,7 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.os.Build
 import android.util.AttributeSet
+import android.util.Log
 import android.view.*
 import android.webkit.URLUtil
 import android.webkit.WebResourceRequest
