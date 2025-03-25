@@ -153,13 +153,9 @@ function scrollToRect(rect) {
       behavior: 'smooth'
     });
   } else {
-    // 水平居中
-    const viewportWidth = window.innerWidth;
-    const offsetX = rect.left + window.scrollX - (viewportWidth - rect.width) / 2;
-    window.scrollTo({
-      left: snapOffset(offsetX),
-      behavior: 'smooth'
-    });
+    document.scrollingElement.scrollLeft = snapOffset(
+          rect.left + window.scrollX
+        );
   }
 
   return true;
