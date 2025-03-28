@@ -147,7 +147,7 @@ function scrollToRect(rect) {
   if (isScrollModeEnabled()) {
     // 使rect底部居中
     const viewportHeight = window.innerHeight;
-    const offsetY = rect.top + window.scrollY - (viewportHeight / 2 - Math.max(rect.height, viewportHeight / 2));
+    const offsetY = rect.top + window.scrollY - (viewportHeight / 2 - Math.min(rect.height, viewportHeight / 2));
     window.scrollTo({
       top: offsetY,
       behavior: 'smooth'
