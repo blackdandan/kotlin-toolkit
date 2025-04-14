@@ -8,6 +8,8 @@
 
 package org.readium.navigator.media.tts
 
+import java.security.MessageDigest
+import java.util.UUID
 import org.readium.r2.shared.ExperimentalReadiumApi
 import org.readium.r2.shared.InternalReadiumApi
 import org.readium.r2.shared.publication.Locator
@@ -32,6 +34,7 @@ internal class TtsUtteranceIterator(
     initialLocator: Locator?,
 ) {
     data class Utterance(
+        val id: TtsEngine.RequestId,
         val utterance: String,
         val resourceIndex: Int,
         val locations: Locator.Locations,
@@ -189,6 +192,11 @@ internal class TtsUtteranceIterator(
         return contentTokenizer.tokenize(this)
     }
 
+    fun String.md5(): String {
+        val bytes = MessageDigest.getInstance("MD5").digest(this.toByteArray())
+        return bytes.joinToString("") { "%02x".format(it) }
+    }
+
     /**
      * Splits a publication [Content.Element] item into the utterances to be spoken.
      */
@@ -206,7 +214,8 @@ internal class TtsUtteranceIterator(
                 resourceIndex = resourceIndex,
                 locations = locator.locations,
                 text = locator.text,
-                language = language
+                language = language,
+                id = TtsEngine.RequestId(locator.toString().md5())
             )
         }
 

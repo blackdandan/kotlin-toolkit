@@ -173,6 +173,8 @@ public class TtsNavigatorFactory<
 
         val contentIterator =
             TtsUtteranceIterator(publication, tokenizerFactory, initialLocator)
+        val prepareContentIterator =
+            TtsUtteranceIterator(publication, tokenizerFactory, initialLocator)
         if (!contentIterator.hasNext()) {
             return Try.failure(
                 Error.UnsupportedPublication(
@@ -204,7 +206,7 @@ public class TtsNavigatorFactory<
             }
 
         val ttsPlayer =
-            TtsPlayer(ttsEngine, contentIterator, actualInitialPreferences)
+            TtsPlayer(ttsEngine, contentIterator, prepareContentIterator, actualInitialPreferences)
                 ?: return Try.failure(
                     Error.UnsupportedPublication(DebugError("Empty content."))
                 )

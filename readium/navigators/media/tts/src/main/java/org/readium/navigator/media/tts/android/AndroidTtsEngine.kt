@@ -329,6 +329,10 @@ public class AndroidTtsEngine private constructor(
         }
     }
 
+    override fun prepare(id: TtsEngine.RequestId, utterance: String) {
+        // do nothing
+    }
+
     override fun close() {
         if (isClosed) {
             return

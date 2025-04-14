@@ -33,11 +33,10 @@ internal class TtsEngineFacade<
     val voices: Set<V>
         get() = engine.voices
 
-    suspend fun speak(text: String, language: Language?, onRange: (IntRange) -> Unit): E? =
+    suspend fun speak(id: TtsEngine.RequestId, text: String, language: Language?, onRange: (IntRange) -> Unit): E? =
         suspendCancellableCoroutine { continuation ->
             continuation.invokeOnCancellation { engine.stop() }
             currentTask?.continuation?.cancel()
-            val id = TtsEngine.RequestId(UUID.randomUUID().toString())
             currentTask = UtteranceTask(id, continuation, onRange)
             engine.speak(id, text, language)
         }
@@ -61,6 +60,10 @@ internal class TtsEngineFacade<
     private fun popTask(id: TtsEngine.RequestId) =
         getTask(id)
             ?.also { currentTask = null }
+
+    fun prepare(id: TtsEngine.RequestId,utterance: String) {
+        engine.prepare(id, utterance)
+    }
 
     private inner class EngineListener : TtsEngine.Listener<E> {
 

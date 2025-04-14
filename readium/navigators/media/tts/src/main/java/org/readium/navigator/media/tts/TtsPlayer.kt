@@ -13,6 +13,7 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Build
+import java.util.UUID
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -48,6 +49,7 @@ internal class TtsPlayer<
     > private constructor(
     private val engineFacade: TtsEngineFacade<S, P, E, V>,
     private val contentIterator: TtsUtteranceIterator,
+    private val prepareIterator: TtsUtteranceIterator,
     initialWindow: UtteranceWindow,
     initialPreferences: P,
 ) : Configurable<S, P> {
@@ -62,6 +64,7 @@ internal class TtsPlayer<
             > invoke(
             engine: TtsEngine<S, P, E, V>,
             contentIterator: TtsUtteranceIterator,
+            prepareIterator: TtsUtteranceIterator,
             initialPreferences: P,
         ): TtsPlayer<S, P, E, V>? {
             val initialContext = tryOrNull { contentIterator.startContext() }
@@ -75,6 +78,7 @@ internal class TtsPlayer<
             return TtsPlayer(
                 ttsEngineFacade,
                 contentIterator,
+                prepareIterator,
                 initialContext,
                 initialPreferences
             )
@@ -195,6 +199,11 @@ internal class TtsPlayer<
 
     val utterance: StateFlow<Utterance> =
         utteranceMutable.asStateFlow()
+
+    /**
+     * 是不是初始化了10个
+     */
+    var prepareInit= false
 
     /**
      * We need to keep the last submitted preferences because TtsSessionAdapter deals with
@@ -475,7 +484,30 @@ internal class TtsPlayer<
         }
     }
 
+    private suspend fun tryLoadNextPrepare() {
+        try {
+            if (prepareInit) {
+                val next = prepareIterator.next()
+                next?.let {
+                    engineFacade.prepare(next.id, next.utterance)
+                }
+            } else {
+                for(i in 0 until 10) {
+                    val next = prepareIterator.next()
+                    next?.let {
+                        engineFacade.prepare(next.id, next.utterance)
+                    }
+                }
+                prepareInit = true
+            }
+
+        } catch (e: Exception) {
+            onContentException(e)
+            return
+        }
+    }
     private suspend fun tryLoadNextContext() {
+        tryLoadNextPrepare()
         val contextNow = utteranceWindow
 
         if (contextNow.nextUtterance == null) {
@@ -525,7 +557,6 @@ internal class TtsPlayer<
         if (!coroutineContext.isActive) {
             return
         }
-
         val error = speakUtterance(utteranceWindow.currentUtterance)
 
         mutex.withLock {
@@ -536,7 +567,7 @@ internal class TtsPlayer<
     }
 
     private suspend fun speakUtterance(utterance: TtsUtteranceIterator.Utterance): E? =
-        engineFacade.speak(utterance.utterance, utterance.language, ::onRangeChanged)
+        engineFacade.speak(utterance.id, utterance.utterance, utterance.language, ::onRangeChanged)
 
     private fun onEngineError(error: E) {
         playbackMutable.value = playbackMutable.value.copy(

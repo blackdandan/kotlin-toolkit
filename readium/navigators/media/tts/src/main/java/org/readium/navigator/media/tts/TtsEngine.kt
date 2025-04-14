@@ -122,4 +122,9 @@ public interface TtsEngine<
      * Sets a new listener or removes the current one.
      */
     public fun setListener(listener: Listener<E>?)
+
+    /**
+     * prepare utterance
+     */
+    public fun prepare(id: RequestId, utterance: String)
 }
