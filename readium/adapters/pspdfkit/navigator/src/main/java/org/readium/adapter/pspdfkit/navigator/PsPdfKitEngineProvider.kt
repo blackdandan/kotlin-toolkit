@@ -61,7 +61,7 @@ public class PsPdfKitEngineProvider(
                         listener?.onConfigurePdfView(builder) ?: builder
 
                     override fun onTap(point: PointF): Boolean =
-                        input.inputListener?.onTap(TapEvent(point)) ?: false
+                        input.inputListener?.onTap(TapEvent(point), true, null) ?: false
                 }
             )
         }

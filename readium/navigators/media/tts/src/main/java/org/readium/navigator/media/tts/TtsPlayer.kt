@@ -55,6 +55,7 @@ internal class TtsPlayer<
 ) : Configurable<S, P> {
 
     companion object {
+        private const val PREPARE_COUNT: Int = 10
 
         suspend operator fun <
             S : TtsEngine.Settings,
@@ -203,7 +204,7 @@ internal class TtsPlayer<
     /**
      * 是不是初始化了10个
      */
-    var prepareInit= false
+    private var prepareInit= false
 
     /**
      * We need to keep the last submitted preferences because TtsSessionAdapter deals with
@@ -492,7 +493,7 @@ internal class TtsPlayer<
                     engineFacade.prepare(next.id, next.utterance)
                 }
             } else {
-                for(i in 0 until 10) {
+                for(i in 0 until PREPARE_COUNT) {
                     val next = prepareIterator.next()
                     next?.let {
                         engineFacade.prepare(next.id, next.utterance)
@@ -607,7 +608,14 @@ internal class TtsPlayer<
         if (preferences == lastPreferences) {
             return
         }
-
+        if (prepareInit) {
+            coroutineScope.launch {
+                for (i in 0 until PREPARE_COUNT) {
+                    prepareIterator.previous()
+                }
+            }
+        }
+        prepareInit = false
         submitPreferencesForSure(preferences)
         restartUtterance()
     }

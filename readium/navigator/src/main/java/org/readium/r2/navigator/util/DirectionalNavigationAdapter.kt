@@ -13,6 +13,7 @@ import org.readium.r2.navigator.input.KeyEvent
 import org.readium.r2.navigator.input.TapEvent
 import org.readium.r2.navigator.preferences.ReadingProgression
 import org.readium.r2.shared.ExperimentalReadiumApi
+import org.readium.r2.shared.publication.Locator
 
 /**
  * Helper handling directional UI events (e.g. edge taps or arrow keys) to turn the pages of a
@@ -56,7 +57,7 @@ public class DirectionalNavigationAdapter(
         Vertical,
     }
 
-    override fun onTap(event: TapEvent): Boolean {
+    override fun onTap(event: TapEvent, clickedBlank: Boolean, clickedLocator: Locator?): Boolean {
         if (navigator.overflow.value.scroll && !handleTapsWhileScrolling) {
             return false
         }

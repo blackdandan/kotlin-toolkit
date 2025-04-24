@@ -788,8 +788,16 @@ public class EpubNavigatorFragment internal constructor(
         override fun javascriptInterfacesForResource(link: Link): Map<String, Any?> =
             config.javascriptInterfaces.mapValues { (_, factory) -> factory(link) }
 
-        override fun onTap(point: PointF): Boolean =
-            inputListener.onTap(TapEvent(point))
+        override fun onTap(point: PointF, clickedBlank: Boolean, clickedLocator: Locator?): Boolean {
+            val resource = readingOrder[resourcePager.currentItem]
+            val locator = clickedLocator
+                ?.copy(
+                    href = resource.url(),
+                    mediaType = resource.mediaType ?: MediaType.XHTML
+                )
+            return inputListener.onTap(TapEvent(point), clickedBlank, locator)
+        }
+
 
         override fun onDragStart(event: R2BasicWebView.DragEvent): Boolean =
             onDrag(DragEvent.Type.Start, event)

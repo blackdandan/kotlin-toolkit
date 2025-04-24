@@ -1,6 +1,7 @@
 package org.readium.r2.navigator.input
 
 import org.readium.r2.shared.ExperimentalReadiumApi
+import org.readium.r2.shared.publication.Locator
 
 @ExperimentalReadiumApi
 public interface InputListener {
@@ -8,7 +9,7 @@ public interface InputListener {
      * Called when the user tapped the content, but nothing handled the event internally (eg.
      * by following an internal link).
      */
-    public fun onTap(event: TapEvent): Boolean = false
+    public fun onTap(event: TapEvent, clickedBlank: Boolean = true, clickedLocator: Locator? = null): Boolean = false
 
     /**
      * Called when the user dragged the content, but nothing handled the event internally.
@@ -33,8 +34,8 @@ internal class CompositeInputListener : InputListener {
         listeners.remove(listener)
     }
 
-    override fun onTap(event: TapEvent): Boolean =
-        listeners.any { it.onTap(event) }
+    override fun onTap(event: TapEvent, clickedBlank: Boolean, clickedLocator: Locator?): Boolean =
+        listeners.any { it.onTap(event, clickedBlank, clickedLocator) }
 
     override fun onDrag(event: DragEvent): Boolean =
         listeners.any { it.onDrag(event) }

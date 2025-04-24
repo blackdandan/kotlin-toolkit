@@ -85,7 +85,7 @@ public class ImageNavigatorFragment private constructor(
         childFragmentManager.fragmentFactory = createFragmentFactory {
             R2CbzPageFragment(publication) { x, y ->
                 inputListener.onTap(
-                    TapEvent(PointF(x, y))
+                    TapEvent(PointF(x, y)), true, null
                 )
             }
         }

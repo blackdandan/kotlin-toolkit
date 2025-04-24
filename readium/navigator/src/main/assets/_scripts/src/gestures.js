@@ -6,11 +6,41 @@
 
 import { handleDecorationClickEvent } from "./decorator";
 import { nearestInteractiveElement } from "./dom";
+import { getCssSelector } from "css-selector-generator";
 
 window.addEventListener("DOMContentLoaded", function () {
   document.addEventListener("click", onClick, false);
   bindDragGesture(document);
 });
+
+function isClickOnBlankArea(e) {
+    const target = e.target;
+    const x = e.clientX;
+    const y = e.clientY;
+
+    // 检查点击位置是否在任何文本的矩形区域内
+    const textNodes = [];
+    const walker = document.createTreeWalker(target, NodeFilter.SHOW_TEXT);
+    let node;
+    while (node = walker.nextNode()) {
+        if (node.nodeValue.trim()) {
+            textNodes.push(node);
+        }
+    }
+
+    for (const textNode of textNodes) {
+        const range = document.createRange();
+        range.selectNodeContents(textNode);
+        const rects = range.getClientRects();
+        for (const rect of rects) {
+            if (x >= rect.left && x <= rect.right && 
+                y >= rect.top && y <= rect.bottom) {
+                return false; // 点击在文字上，不是空白区域
+            }
+        }
+    }
+    return true; // 没有点击到文字，是空白区域
+}
 
 function onClick(event) {
   if (!window.getSelection().isCollapsed) {
@@ -19,12 +49,25 @@ function onClick(event) {
   }
 
   var pixelRatio = window.devicePixelRatio;
+  var clickedLocator = {
+       href: "#",
+       type: "application/xhtml+xml",
+       locations: {
+         cssSelector: getCssSelector(event.target),
+       },
+       text: {
+         highlight: event.target.textContent,
+       },
+     }
+  var isBlank = isClickOnBlankArea(event);
   let clickEvent = {
     defaultPrevented: event.defaultPrevented,
     x: event.clientX * pixelRatio,
     y: event.clientY * pixelRatio,
     targetElement: event.target.outerHTML,
     interactiveElement: nearestInteractiveElement(event.target),
+    isBlank: isBlank, // 是否点击在空白区域
+    clickedLocator: clickedLocator,
   };
 
   if (handleDecorationClickEvent(event, clickEvent)) {

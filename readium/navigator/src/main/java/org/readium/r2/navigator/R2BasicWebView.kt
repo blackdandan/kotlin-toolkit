@@ -64,7 +64,7 @@ internal open class R2BasicWebView(context: Context, attrs: AttributeSet) : WebV
         fun onPageLoaded(webView: R2BasicWebView, link: Link) {}
         fun onPageChanged(pageIndex: Int, totalPages: Int, url: String) {}
         fun onPageEnded(end: Boolean) {}
-        fun onTap(point: PointF): Boolean = false
+        fun onTap(point: PointF, clickedBlank: Boolean = true, clickedLocator: Locator? = null): Boolean = false
         fun onDragStart(event: DragEvent): Boolean = false
         fun onDragMove(event: DragEvent): Boolean = false
         fun onDragEnd(event: DragEvent): Boolean = false
@@ -289,7 +289,7 @@ internal open class R2BasicWebView(context: Context, attrs: AttributeSet) : WebV
             return handleFootnote(event.interactiveElement)
         }
 
-        return runBlocking(uiScope.coroutineContext) { listener?.onTap(event.point) ?: false }
+        return runBlocking(uiScope.coroutineContext) { listener?.onTap(event.point, event.clickedBlank, event.clickedLocator) ?: false }
     }
 
     /**
@@ -316,6 +316,8 @@ internal open class R2BasicWebView(context: Context, attrs: AttributeSet) : WebV
         val point: PointF,
         val targetElement: String,
         val interactiveElement: String?,
+        val clickedBlank: Boolean,
+        val clickedLocator: Locator?
     ) {
         companion object {
             fun fromJSONObject(obj: JSONObject?): TapEvent? {
@@ -328,7 +330,9 @@ internal open class R2BasicWebView(context: Context, attrs: AttributeSet) : WebV
                     defaultPrevented = obj.optBoolean("defaultPrevented"),
                     point = PointF(x, y),
                     targetElement = obj.optString("targetElement"),
-                    interactiveElement = obj.optNullableString("interactiveElement")
+                    interactiveElement = obj.optNullableString("interactiveElement"),
+                    clickedBlank = obj.optBoolean("isBlank"),
+                    clickedLocator = Locator.fromJSON(obj.optJSONObject("clickedLocator"))
                 )
             }
 
