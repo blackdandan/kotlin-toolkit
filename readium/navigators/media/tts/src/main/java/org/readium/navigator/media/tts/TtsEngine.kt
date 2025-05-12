@@ -101,6 +101,11 @@ public interface TtsEngine<
          * Called when an error has occurred during processing of the utterance with the given id.
          */
         public fun onError(requestId: RequestId, error: E)
+
+        /**
+         * Called when the utterance with the given id need prepared.
+         */
+        public fun onNeedPrepare(requestId: RequestId)
     }
 
     /**

@@ -13,7 +13,6 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Build
-import java.util.UUID
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -68,7 +67,10 @@ internal class TtsPlayer<
             prepareIterator: TtsUtteranceIterator,
             initialPreferences: P,
         ): TtsPlayer<S, P, E, V>? {
-            val initialContext = tryOrNull { contentIterator.startContext() }
+            val initialContext = tryOrNull {
+                prepareIterator.next()
+                contentIterator.startContext()
+            }
                 ?: return null
 
             val ttsEngineFacade =
@@ -318,6 +320,7 @@ internal class TtsPlayer<
     private suspend fun goAsync(locator: Locator) = mutex.withLock {
         playbackJob?.cancel()
         contentIterator.seek(locator)
+        prepareIterator.seek(locator)
         resetContext()
         playbackJob?.join()
         playIfReadyAndNotPaused()
@@ -332,6 +335,7 @@ internal class TtsPlayer<
     private suspend fun goAsync(resourceIndex: Int) = mutex.withLock {
         playbackJob?.cancel()
         contentIterator.seekToResource(resourceIndex)
+        prepareIterator.seekToResource(resourceIndex)
         resetContext()
         playbackJob?.join()
         playIfReadyAndNotPaused()
@@ -410,6 +414,7 @@ internal class TtsPlayer<
         playbackJob?.cancel()
         val currentIndex = utteranceMutable.value.position.resourceIndex
         contentIterator.seekToResource(currentIndex + 1)
+        prepareIterator.seekToResource(currentIndex + 1)
         resetContext()
         playbackJob?.join()
         playIfReadyAndNotPaused()
@@ -433,6 +438,7 @@ internal class TtsPlayer<
         playbackJob?.cancel()
         val currentIndex = utteranceMutable.value.position.resourceIndex
         contentIterator.seekToResource(currentIndex - 1)
+        prepareIterator.seekToResource(currentIndex - 1)
         resetContext()
         playbackJob?.join()
         playIfReadyAndNotPaused()
@@ -454,18 +460,23 @@ internal class TtsPlayer<
             try {
                 // Get previously currentUtterance once more
                 contentIterator.previous()
+                prepareIterator.previous()
 
                 // Get previously previousUtterance once more
                 contentIterator.previous()
+                prepareIterator.previous()
 
                 // Get new previous utterance
                 val previousUtterance = contentIterator.previous()
+                prepareIterator.previous()
 
                 // Go to currentUtterance position
                 contentIterator.next()
+                prepareIterator.next()
 
                 // Go to nextUtterance position
                 contentIterator.next()
+                prepareIterator.next()
 
                 previousUtterance
             } catch (e: Exception) {
@@ -508,7 +519,6 @@ internal class TtsPlayer<
         }
     }
     private suspend fun tryLoadNextContext() {
-        tryLoadNextPrepare()
         val contextNow = utteranceWindow
 
         if (contextNow.nextUtterance == null) {
@@ -536,6 +546,7 @@ internal class TtsPlayer<
 
     private suspend fun resetContext() {
         val startContext = try {
+            prepareIterator.startContext()
             contentIterator.startContext()
         } catch (e: Exception) {
             onContentException(e)
@@ -559,7 +570,6 @@ internal class TtsPlayer<
             return
         }
         val error = speakUtterance(utteranceWindow.currentUtterance)
-
         mutex.withLock {
             error?.let { exception -> onEngineError(exception) }
             tryLoadNextContext()
@@ -568,7 +578,13 @@ internal class TtsPlayer<
     }
 
     private suspend fun speakUtterance(utterance: TtsUtteranceIterator.Utterance): E? =
-        engineFacade.speak(utterance.id, utterance.utterance, utterance.language, ::onRangeChanged)
+        engineFacade.speak(utterance.id, utterance.utterance, utterance.language, ::onRangeChanged, ::prepare)
+
+    private fun prepare() {
+        coroutineScope.launch {
+            tryLoadNextPrepare()
+        }
+    }
 
     private fun onEngineError(error: E) {
         playbackMutable.value = playbackMutable.value.copy(

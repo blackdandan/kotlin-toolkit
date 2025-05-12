@@ -6,7 +6,6 @@
 
 package org.readium.navigator.media.tts
 
-import java.util.*
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -33,12 +32,19 @@ internal class TtsEngineFacade<
     val voices: Set<V>
         get() = engine.voices
 
-    suspend fun speak(id: TtsEngine.RequestId, text: String, language: Language?, onRange: (IntRange) -> Unit): E? =
+    suspend fun speak(
+        id: TtsEngine.RequestId,
+        text: String,
+        language: Language?,
+        onRange: (IntRange) -> Unit,
+        onPrepare: () -> Unit,
+    ): E? =
         suspendCancellableCoroutine { continuation ->
             continuation.invokeOnCancellation { engine.stop() }
             currentTask?.continuation?.cancel()
-            currentTask = UtteranceTask(id, continuation, onRange)
+            currentTask = UtteranceTask(id, continuation, onRange, onPrepare)
             engine.speak(id, text, language)
+            onPrepare.invoke()
         }
 
     fun close() {
@@ -52,6 +58,7 @@ internal class TtsEngineFacade<
         val requestId: TtsEngine.RequestId,
         val continuation: CancellableContinuation<E?>,
         val onRange: (IntRange) -> Unit,
+        val onPrepare: (() -> Unit)?,
     )
 
     private fun getTask(id: TtsEngine.RequestId) =
@@ -88,6 +95,10 @@ internal class TtsEngineFacade<
 
         override fun onError(requestId: TtsEngine.RequestId, error: E) {
             popTask(requestId)?.continuation?.resume(error) { _, _, _ -> }
+        }
+
+        override fun onNeedPrepare(requestId: TtsEngine.RequestId) {
+            getTask(requestId)?.onPrepare?.invoke()
         }
     }
 }
