@@ -38,11 +38,13 @@ internal class TtsEngineFacade<
         language: Language?,
         onRange: (IntRange) -> Unit,
         onPrepare: () -> Unit,
+        onWaiting: (() -> Unit)?,
+        endWaiting: (() -> Unit)?
     ): E? =
         suspendCancellableCoroutine { continuation ->
             continuation.invokeOnCancellation { engine.stop() }
             currentTask?.continuation?.cancel()
-            currentTask = UtteranceTask(id, continuation, onRange, onPrepare)
+            currentTask = UtteranceTask(id, continuation, onRange, onPrepare, onWaiting, endWaiting)
             engine.speak(id, text, language)
             onPrepare.invoke()
         }
@@ -59,6 +61,8 @@ internal class TtsEngineFacade<
         val continuation: CancellableContinuation<E?>,
         val onRange: (IntRange) -> Unit,
         val onPrepare: (() -> Unit)?,
+        val onWaiting: (() -> Unit)?,
+        val endWaiting: (() -> Unit)?,
     )
 
     private fun getTask(id: TtsEngine.RequestId) =
@@ -99,6 +103,14 @@ internal class TtsEngineFacade<
 
         override fun onNeedPrepare(requestId: TtsEngine.RequestId) {
             getTask(requestId)?.onPrepare?.invoke()
+        }
+
+        override fun onWaiting(requestId: TtsEngine.RequestId) {
+            getTask(requestId)?.onWaiting?.invoke()
+        }
+
+        override fun endWaiting(requestId: TtsEngine.RequestId) {
+            getTask(requestId)?.endWaiting?.invoke()
         }
     }
 }

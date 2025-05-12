@@ -86,6 +86,8 @@ public class TtsNavigator<
 
         public data object Ended : State, MediaNavigator.State.Ended
 
+        public data object Buffering : State, MediaNavigator.State.Buffering
+
         public data class Failure(val error: Error) : State, MediaNavigator.State.Failure
     }
 
@@ -189,6 +191,7 @@ public class TtsNavigator<
         when (this) {
             TtsPlayer.State.Ready -> State.Ready
             TtsPlayer.State.Ended -> State.Ended
+            TtsPlayer.State.Waiting -> State.Buffering
             is TtsPlayer.State.Failure -> this.toError()
         }
 

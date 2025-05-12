@@ -106,6 +106,10 @@ public interface TtsEngine<
          * Called when the utterance with the given id need prepared.
          */
         public fun onNeedPrepare(requestId: RequestId)
+
+        public fun onWaiting(requestId: RequestId)
+
+        public fun endWaiting(requestId: RequestId)
     }
 
     /**

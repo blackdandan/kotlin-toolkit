@@ -132,6 +132,8 @@ internal class TtsPlayer<
          */
         data object Ended : State
 
+        data object Waiting: State
+
         /**
          * The player cannot play because an error occurred.
          */
@@ -578,7 +580,29 @@ internal class TtsPlayer<
     }
 
     private suspend fun speakUtterance(utterance: TtsUtteranceIterator.Utterance): E? =
-        engineFacade.speak(utterance.id, utterance.utterance, utterance.language, ::onRangeChanged, ::prepare)
+        engineFacade.speak(utterance.id,
+            utterance.utterance,
+            utterance.language,
+            ::onRangeChanged,
+            ::prepare,
+            ::waiting,
+            ::endWaiting)
+
+    private fun endWaiting() {
+        if (playbackMutable.value.playWhenReady) {
+            playbackMutable.value = playbackMutable.value.copy(
+                state = State.Ready
+            )
+        }
+    }
+
+    private fun waiting() {
+        if (playbackMutable.value.playWhenReady) {
+            playbackMutable.value = playbackMutable.value.copy(
+                state = State.Waiting
+            )
+        }
+    }
 
     private fun prepare() {
         coroutineScope.launch {

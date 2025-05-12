@@ -905,6 +905,7 @@ internal class TtsSessionAdapter<E : TtsEngine.Error>(
         TtsPlayer.State.Ready -> STATE_READY
         TtsPlayer.State.Ended -> STATE_ENDED
         is TtsPlayer.State.Failure -> STATE_IDLE
+        TtsPlayer.State.Waiting -> STATE_BUFFERING
     }
 
     @Suppress("Unchecked_cast")
