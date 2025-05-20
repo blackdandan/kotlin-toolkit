@@ -21,9 +21,9 @@ dependencies {
     api(project(":readium:readium-shared"))
     api(project(":readium:readium-navigator"))
     api(project(":readium:adapters:pdfium:readium-adapter-pdfium-document"))
+    implementation(project(":readium:adapters:pdfium:readium-adapter-pdfium-common"))
 //    implementation(files("../libs/pdfium-android-1.8.2.jar"))
 //    implementation(files("libs/android-pdf-viewer-2.8.2.jar"))
-
     implementation("com.github.barteksc:android-pdf-viewer:3.2.0-beta.1")
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.timber)

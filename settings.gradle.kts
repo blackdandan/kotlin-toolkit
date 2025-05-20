@@ -18,6 +18,10 @@ dependencyResolutionManagement {
 
 rootProject.name = "Readium"
 
+include(":readium:adapters:pdfium:common")
+project(":readium:adapters:pdfium:common")
+    .name = "readium-adapter-pdfium-common"
+
 include(":readium:adapters:pdfium:document")
 project(":readium:adapters:pdfium:document")
     .name = "readium-adapter-pdfium-document"
@@ -46,9 +50,9 @@ include(":readium:navigators:common")
 project(":readium:navigators:common")
     .name = "readium-navigator-common"
 
-include(":readium:navigators:web")
-project(":readium:navigators:web")
-    .name = "readium-navigator-web"
+// include(":readium:navigators:web")
+// project(":readium:navigators:web")
+//     .name = "readium-navigator-web"
 
 include(":readium:navigators:media:common")
 project(":readium:navigators:media:common")
