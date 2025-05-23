@@ -22,6 +22,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.os.Handler
+import android.util.Log
+import java.lang.ref.WeakReference
 
 internal class AudioBecomingNoisyManager(
     context: Context,
@@ -62,9 +64,10 @@ internal class AudioBecomingNoisyManager(
 
     private inner class AudioBecomingNoisyReceiver(
         private val eventHandler: Handler,
-        private val listener: EventListener,
+        listener: EventListener,
     ) :
         BroadcastReceiver(), Runnable {
+        private val weakListener = WeakReference(listener) // 改用弱引用
         override fun onReceive(context: Context, intent: Intent) {
             if (AudioManager.ACTION_AUDIO_BECOMING_NOISY == intent.action) {
                 eventHandler.post(this)
@@ -73,7 +76,7 @@ internal class AudioBecomingNoisyManager(
 
         override fun run() {
             if (receiverRegistered) {
-                listener.onAudioBecomingNoisy()
+                weakListener.get()?.onAudioBecomingNoisy() // 安全调用
             }
         }
     }

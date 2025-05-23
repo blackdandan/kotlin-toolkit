@@ -10,6 +10,7 @@ package org.readium.navigator.media.tts
 
 import androidx.media3.common.Player
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.StateFlow
 import org.readium.navigator.media.common.Media3Adapter
 import org.readium.navigator.media.common.MediaNavigator
@@ -38,7 +39,7 @@ public class TtsNavigator<
     E : TtsEngine.Error,
     V : TtsEngine.Voice,
     > internal constructor(
-    coroutineScope: CoroutineScope,
+    private val coroutineScope: CoroutineScope,
     private val publication: Publication,
     private val player: TtsPlayer<S, P, E, V>,
     private val sessionAdapter: TtsSessionAdapter<E>,
@@ -155,6 +156,7 @@ public class TtsNavigator<
 
     override fun close() {
         player.close()
+        coroutineScope.cancel()
         sessionAdapter.release()
     }
 

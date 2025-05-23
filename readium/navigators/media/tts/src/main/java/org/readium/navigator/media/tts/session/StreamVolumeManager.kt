@@ -25,6 +25,7 @@ import androidx.media3.common.C
 import androidx.media3.common.util.Assertions
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.Util
+import java.lang.ref.WeakReference
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 /** A manager that wraps [AudioManager] to control/listen audio stream volume.  */
@@ -58,7 +59,7 @@ internal class StreamVolumeManager(context: Context, eventHandler: Handler, list
         streamType = C.STREAM_TYPE_DEFAULT
         volume = getVolumeFromManager(audioManager, streamType)
         muted = getMutedFromManager(audioManager, streamType)
-        val receiver = VolumeChangeReceiver()
+        val receiver = VolumeChangeReceiver(WeakReference(this))
         val filter = IntentFilter(VOLUME_CHANGED_ACTION)
         try {
             applicationContext.registerReceiver(receiver, filter)
@@ -159,6 +160,7 @@ internal class StreamVolumeManager(context: Context, eventHandler: Handler, list
             } catch (e: RuntimeException) {
                 Log.w(TAG, "Error unregistering stream volume receiver", e)
             }
+            eventHandler.removeCallbacksAndMessages(null) // 清除所有消息
             receiver = null
         }
     }
@@ -173,9 +175,13 @@ internal class StreamVolumeManager(context: Context, eventHandler: Handler, list
         }
     }
 
-    private inner class VolumeChangeReceiver : BroadcastReceiver() {
+    private class VolumeChangeReceiver(
+        private val weakManager: WeakReference<StreamVolumeManager>
+    ) : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            eventHandler.post { updateVolumeAndNotifyIfChanged() }
+            weakManager.get()?.eventHandler?.post {
+                weakManager.get()?.updateVolumeAndNotifyIfChanged()
+            }
         }
     }
 

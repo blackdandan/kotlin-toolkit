@@ -18,6 +18,7 @@ import android.speech.tts.TextToSpeech.*
 import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice as AndroidVoice
 import android.speech.tts.Voice.*
+import java.lang.ref.WeakReference
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -366,7 +367,7 @@ public class AndroidTtsEngine private constructor(
         if (utteranceListener == null) {
             engine.setOnUtteranceProgressListener(null)
         } else {
-            engine.setOnUtteranceProgressListener(UtteranceListener(utteranceListener))
+            engine.setOnUtteranceProgressListener(SafeUtteranceListener(WeakReference((utteranceListener))))
         }
     }
 
@@ -464,15 +465,17 @@ public class AndroidTtsEngine private constructor(
     private fun TextToSpeech.voiceForName(name: String) =
         voices.firstOrNull { it.name == name }
 
-    private class UtteranceListener(
-        private val listener: TtsEngine.Listener<Error>?,
+
+
+    private class SafeUtteranceListener(
+        private val listener: WeakReference<TtsEngine.Listener<Error>?>,
     ) : UtteranceProgressListener() {
         override fun onStart(utteranceId: String) {
-            listener?.onStart(TtsEngine.RequestId(utteranceId))
+            listener.get()?.onStart(TtsEngine.RequestId(utteranceId))
         }
 
         override fun onStop(utteranceId: String, interrupted: Boolean) {
-            listener?.let {
+            listener.get()?.let {
                 val requestId = TtsEngine.RequestId(utteranceId)
                 if (interrupted) {
                     it.onInterrupted(requestId)
@@ -483,7 +486,7 @@ public class AndroidTtsEngine private constructor(
         }
 
         override fun onDone(utteranceId: String) {
-            listener?.onDone(TtsEngine.RequestId(utteranceId))
+            listener.get()?.onDone(TtsEngine.RequestId(utteranceId))
         }
 
         @Deprecated(
@@ -496,14 +499,14 @@ public class AndroidTtsEngine private constructor(
         }
 
         override fun onError(utteranceId: String, errorCode: Int) {
-            listener?.onError(
+            listener.get()?.onError(
                 TtsEngine.RequestId(utteranceId),
                 Error.fromNativeError(errorCode)
             )
         }
 
         override fun onRangeStart(utteranceId: String, start: Int, end: Int, frame: Int) {
-            listener?.onRange(TtsEngine.RequestId(utteranceId), start until end)
+            listener.get()?.onRange(TtsEngine.RequestId(utteranceId), start until end)
         }
     }
 }
