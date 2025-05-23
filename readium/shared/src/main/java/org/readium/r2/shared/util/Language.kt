@@ -50,12 +50,13 @@ public class Language(code: String) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
-        if (code != (other as Language).code) return false
-        return true
+
+        other as Language
+        return code.equals(other.code, ignoreCase = true)
     }
 
     override fun hashCode(): Int =
-        code.hashCode()
+        code.lowercase().hashCode()
 
     internal object Serializer : KSerializer<Language> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
