@@ -144,8 +144,10 @@ internal class TtsSessionAdapter<E : TtsEngine.Error>(
                 COMMAND_PLAY_PAUSE,
                 COMMAND_STOP,
 
-                // COMMAND_SEEK_BACK,
-                // COMMAND_SEEK_FORWARD,
+//                 COMMAND_SEEK_BACK,
+//                 COMMAND_SEEK_FORWARD,
+                COMMAND_SEEK_TO_NEXT,
+                COMMAND_SEEK_TO_PREVIOUS,
 
                 // COMMAND_SEEK_TO_NEXT_MEDIA_ITEM,
                 // COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM,
@@ -364,20 +366,21 @@ internal class TtsSessionAdapter<E : TtsEngine.Error>(
     }
 
     override fun seekToPrevious() {
-        val timeline = currentTimeline
-        if (timeline.isEmpty || isPlayingAd) {
-            return
-        }
-        val hasPreviousMediaItem = hasPreviousMediaItem()
-        if (isCurrentMediaItemLive && !isCurrentMediaItemSeekable) {
-            if (hasPreviousMediaItem) {
-                seekToPreviousMediaItem()
-            }
-        } else if (hasPreviousMediaItem && currentPosition <= maxSeekToPreviousPosition) {
-            seekToPreviousMediaItem()
-        } else {
-            seekTo( /* positionMs= */0)
-        }
+//        val timeline = currentTimeline
+//        if (timeline.isEmpty || isPlayingAd) {
+//            return
+//        }
+//        val hasPreviousMediaItem = hasPreviousMediaItem()
+//        if (isCurrentMediaItemLive && !isCurrentMediaItemSeekable) {
+//            if (hasPreviousMediaItem) {
+//                seekToPreviousMediaItem()
+//            }
+//        } else if (hasPreviousMediaItem && currentPosition <= maxSeekToPreviousPosition) {
+//            seekToPreviousMediaItem()
+//        } else {
+//            seekTo( /* positionMs= */0)
+//        }
+        ttsPlayer.previousUtterance()
     }
 
     @Deprecated("Deprecated in Java", ReplaceWith("hasNextMediaItem()"))
@@ -412,15 +415,16 @@ internal class TtsSessionAdapter<E : TtsEngine.Error>(
     }
 
     override fun seekToNext() {
-        val timeline = currentTimeline
-        if (timeline.isEmpty || isPlayingAd) {
-            return
-        }
-        if (hasNextMediaItem()) {
-            seekToNextMediaItem()
-        } else if (isCurrentMediaItemLive && isCurrentMediaItemDynamic) {
-            seekToDefaultPosition()
-        }
+//        val timeline = currentTimeline
+//        if (timeline.isEmpty || isPlayingAd) {
+//            return
+//        }
+//        if (hasNextMediaItem()) {
+//            seekToNextMediaItem()
+//        } else if (isCurrentMediaItemLive && isCurrentMediaItemDynamic) {
+//            seekToDefaultPosition()
+//        }
+        ttsPlayer.nextUtterance()
     }
 
     override fun setPlaybackParameters(playbackParameters: PlaybackParameters) {
