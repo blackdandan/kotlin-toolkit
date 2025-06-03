@@ -320,6 +320,7 @@ internal class TtsPlayer<
     }
 
     private suspend fun goAsync(locator: Locator) = mutex.withLock {
+        endWaiting()
         playbackJob?.cancel()
         contentIterator.seek(locator)
         prepareIterator.seek(locator)
@@ -335,6 +336,7 @@ internal class TtsPlayer<
     }
 
     private suspend fun goAsync(resourceIndex: Int) = mutex.withLock {
+        endWaiting()
         playbackJob?.cancel()
         contentIterator.seekToResource(resourceIndex)
         prepareIterator.seekToResource(resourceIndex)
@@ -350,6 +352,7 @@ internal class TtsPlayer<
 
         coroutineScope.launch {
             mutex.withLock {
+                endWaiting()
                 playbackJob?.cancel()
                 playbackJob?.join()
                 utteranceMutable.value = utteranceMutable.value.copy(range = null)
@@ -371,7 +374,7 @@ internal class TtsPlayer<
         if (utteranceWindow.nextUtterance == null) {
             return
         }
-
+        endWaiting()
         playbackJob?.cancel()
         tryLoadNextContext()
         playbackJob?.join()
@@ -391,6 +394,7 @@ internal class TtsPlayer<
         if (utteranceWindow.previousUtterance == null) {
             return
         }
+        endWaiting()
         playbackJob?.cancel()
         tryLoadPreviousContext()
         playbackJob?.join()
@@ -412,7 +416,7 @@ internal class TtsPlayer<
         if (!hasNextUtterance()) {
             return
         }
-
+        endWaiting()
         playbackJob?.cancel()
         val currentIndex = utteranceMutable.value.position.resourceIndex
         contentIterator.seekToResource(currentIndex + 1)
@@ -437,6 +441,7 @@ internal class TtsPlayer<
         if (!hasPreviousResource()) {
             return
         }
+        endWaiting()
         playbackJob?.cancel()
         val currentIndex = utteranceMutable.value.position.resourceIndex
         contentIterator.seekToResource(currentIndex - 1)
