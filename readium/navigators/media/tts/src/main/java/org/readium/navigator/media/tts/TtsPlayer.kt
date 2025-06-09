@@ -511,6 +511,11 @@ internal class TtsPlayer<
                     engineFacade.prepare(next.id, next.utterance)
                 }
             } else {
+                val startContext = prepareIterator.startContext()
+                val current = startContext?.currentUtterance
+                current?.let {
+                    engineFacade.prepare(current.id, current.utterance)
+                }
                 for(i in 0 until PREPARE_COUNT) {
                     val next = prepareIterator.next()
                     next?.let {
@@ -609,7 +614,7 @@ internal class TtsPlayer<
         }
     }
 
-    private fun prepare() {
+    fun prepare() {
         coroutineScope.launch {
             tryLoadNextPrepare()
         }

@@ -131,6 +131,10 @@ public class TtsNavigator<
         player.pause()
     }
 
+    public fun prepare() {
+        player.prepare()
+    }
+
     public fun go(locator: Locator) {
         player.go(publication.normalizeLocator(locator))
     }
