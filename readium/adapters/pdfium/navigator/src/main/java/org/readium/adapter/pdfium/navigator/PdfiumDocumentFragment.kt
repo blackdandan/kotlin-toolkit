@@ -66,7 +66,7 @@ public class PdfiumDocumentFragment internal constructor(
             pageSpacing = 0.0,
             readingProgression = ReadingProgression.LTR,
             scrollAxis = Axis.VERTICAL,
-            backgroundColor = Color(android.graphics.Color.WHITE)
+            backgroundColor = Color(android.graphics.Color.RED)
         ),
         listener = null
     )
@@ -92,6 +92,7 @@ public class PdfiumDocumentFragment internal constructor(
                         }
                     }
                 })
+                it.setBackgroundColor(android.graphics.Color.TRANSPARENT)
                 pdfView = it
             }
     }
