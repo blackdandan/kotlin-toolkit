@@ -568,6 +568,8 @@ internal class TtsPlayer<
         if (utteranceWindow.nextUtterance == null && utteranceWindow.ended) {
             onEndReached()
         }
+        // 随即跳转一个位置之后要修改这个
+        utteranceMutable.value = utteranceWindow.currentUtterance.ttsPlayerUtterance()
     }
 
     private fun onEndReached() {
